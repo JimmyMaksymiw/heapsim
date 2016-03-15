@@ -99,4 +99,11 @@ public class FirstFit extends Memory {
         MemoryUtil.printLayout(memoryStatus);
         MemoryUtil.printPointerPos(pointers);
     }
+
+    /**
+     * Compacts the memory space.
+     */
+    public void compact() {
+        // TODO Implement this!
+    }
 }
