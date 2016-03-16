@@ -5,16 +5,17 @@ import memory.MemoryUtil.Status;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
- * This memory model allocates memory cells based on the first-fit method. 
- * 
+ * This memory model allocates memory cells based on the first-fit method.
+ *
  * @author "Johan Holmberg, Malmö university"
  * @since 1.0
  */
 public class FirstFit extends Memory {
-    private HashMap<Pointer, Integer> pointers;
     private Status[] memoryStatus;
+    private HashMap<Pointer, Integer> pointers;
 
     /**
      * Initializes an instance of a first fit-based memory.
@@ -104,6 +105,28 @@ public class FirstFit extends Memory {
      * Compacts the memory space.
      */
     public void compact() {
-        // TODO Implement this!
+        int counter = 0, pointerLength, pointerStart;
+        for (Map.Entry<Pointer, Integer> entry : pointers.entrySet()) {
+            // Get pointer info
+            Pointer p = entry.getKey();
+            pointerStart = p.pointsAt();
+            pointerLength = entry.getValue();
+
+            // Update memory statuses
+            if (pointerStart != 0) {
+                for (int i = pointerStart; i < pointerStart + pointerLength; i++) {
+                    memoryStatus[i] = Status.FREE;
+                }
+            }
+            for (int i = counter; i < counter + pointerLength; i++) {
+                memoryStatus[i] = Status.ALLOCATED;
+            }
+
+            // Redirect pointer
+            p.pointAt(counter);
+
+            // Set counter at first free slot
+            counter = p.pointsAt() + pointerLength;
+        }
     }
 }

@@ -22,7 +22,7 @@ public class SimpleBatch {
 	}
 
 	public void run() {
-		Memory m = new FirstFit(100); // Swap this for  your own implementation
+		FirstFit m = new FirstFit(100); // Swap this for  your own implementation
 		Pointer p1, p2, p3, p4, p5, p6;
 		
 		p1 = m.alloc(20);
@@ -42,8 +42,8 @@ public class SimpleBatch {
 		
 		m.printLayout();
 		
-//		m.compact();
-//		System.out.println("After compact()");
-//		m.printLayout();
+		m.compact();
+		System.out.println("After compact()");
+		m.printLayout();
 	}
 }
