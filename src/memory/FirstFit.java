@@ -3,9 +3,7 @@ package memory;
 import memory.MemoryUtil.NoFreeMemoryException;
 import memory.MemoryUtil.Status;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This memory model allocates memory cells based on the first-fit method.
@@ -15,7 +13,7 @@ import java.util.Map;
  */
 public class FirstFit extends Memory {
     private Status[] memoryStatus;
-    private HashMap<Pointer, Integer> pointers;
+    private TreeMap<Pointer, Integer> pointers;
 
     /**
      * Initializes an instance of a first fit-based memory.
@@ -23,9 +21,8 @@ public class FirstFit extends Memory {
      */
     public FirstFit(int size) {
         super(size);
-        pointers = new HashMap<>();
-        memoryStatus = new Status[size];
-        Arrays.fill(memoryStatus, Status.FREE);
+        pointers = MemoryUtil.getTreeMap();
+        memoryStatus = MemoryUtil.getStatusArray(size);
     }
 
     /**
@@ -35,15 +32,20 @@ public class FirstFit extends Memory {
      */
     @Override
     public Pointer alloc(int size) {
-        try {
-            int address = checkFistFreeSpace(size);
-            Pointer p = new Pointer(address, this);
-            pointers.put(p, size);
-            MemoryUtil.updateMemoryStatus(memoryStatus, address, address + size, Status.ALLOCATED);
-            return p;
-        } catch (NoFreeMemoryException e) {
-            System.err.println("No free memory");
+        // if there is no space left in the memory to allocate in the first loop it calls compact() and tries again.
+        for (int i = 0; i < 2; i++) {
+            try {
+                int address = checkFistFreeSpace(size);
+                Pointer p = new Pointer(address, this);
+                pointers.put(p, size);
+                MemoryUtil.updateMemoryStatus(memoryStatus, address, address + size, Status.ALLOCATED);
+                return p;
+            } catch (NoFreeMemoryException e) {
+                if (i == 0) compact();
+                else System.err.println("No free memory");
+            }
         }
+
         return null;
     }
 
@@ -88,12 +90,7 @@ public class FirstFit extends Memory {
     }
 
     /**
-     * Prints a simple model of the memory. Example:
-     * <p>
-     * |    0 -  110 | Allocated
-     * |  111 -  150 | Free
-     * |  151 -  999 | Allocated
-     * | 1000 - 1024 | Free
+     * Prints a simple model of the memory, and the pointers.
      */
     @Override
     public void printLayout() {
@@ -105,28 +102,6 @@ public class FirstFit extends Memory {
      * Compacts the memory space.
      */
     public void compact() {
-        int counter = 0, pointerLength, pointerStart;
-        for (Map.Entry<Pointer, Integer> entry : pointers.entrySet()) {
-            // Get pointer info
-            Pointer p = entry.getKey();
-            pointerStart = p.pointsAt();
-            pointerLength = entry.getValue();
-
-            // Update memory statuses
-            if (pointerStart != 0) {
-                for (int i = pointerStart; i < pointerStart + pointerLength; i++) {
-                    memoryStatus[i] = Status.FREE;
-                }
-            }
-            for (int i = counter; i < counter + pointerLength; i++) {
-                memoryStatus[i] = Status.ALLOCATED;
-            }
-
-            // Redirect pointer
-            p.pointAt(counter);
-
-            // Set counter at first free slot
-            counter = p.pointsAt() + pointerLength;
-        }
+        MemoryUtil.compact(pointers, memoryStatus);
     }
 }

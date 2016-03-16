@@ -3,8 +3,7 @@ package memory;
 import memory.MemoryUtil.NoFreeMemoryException;
 import memory.MemoryUtil.Status;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.TreeMap;
 
 /**
  * This memory model allocates memory cells based on the best-fit method.
@@ -13,37 +12,38 @@ import java.util.HashMap;
  * @since 1.0
  */
 public class BestFit extends Memory {
-    private HashMap<Pointer, Integer> pointers;
+    private TreeMap<Pointer, Integer> pointers;
     private Status[] memoryStatus;
 
     /**
      * Initializes an instance of a best fit-based memory.
-     *
      * @param size The number of cells.
      */
     public BestFit(int size) {
         super(size);
-        pointers = new HashMap<>();
-        memoryStatus = new Status[size];
-        Arrays.fill(memoryStatus, Status.FREE);
+        pointers = MemoryUtil.getTreeMap();
+        memoryStatus = MemoryUtil.getStatusArray(size);
     }
 
     /**
      * Allocates a number of memory cells.
-     *
      * @param size the number of cells to allocate.
      * @return The address of the first cell.
      */
     @Override
     public Pointer alloc(int size) {
-        try {
-            int address = checkBestFit(size);
-            Pointer p = new Pointer(address, this);
-            pointers.put(p, size);
-            MemoryUtil.updateMemoryStatus(memoryStatus, address, address + size, Status.ALLOCATED);
-            return p;
-        } catch (NoFreeMemoryException e) {
-            System.err.println("No free memory");
+        // if there is no space left in the memory to allocate in the first loop it calls compact() and tries again.
+        for (int i = 0; i < 2; i++) {
+            try {
+                int address = checkBestFit(size);
+                Pointer p = new Pointer(address, this);
+                pointers.put(p, size);
+                MemoryUtil.updateMemoryStatus(memoryStatus, address, address + size, Status.ALLOCATED);
+                return p;
+            } catch (NoFreeMemoryException e) {
+                if (i == 0) compact();
+                else System.err.println("No free memory");
+            }
         }
         return null;
     }
@@ -89,7 +89,6 @@ public class BestFit extends Memory {
 
     /**
      * Releases a number of data cells
-     *
      * @param p The pointer to release.
      */
     @Override
@@ -105,16 +104,18 @@ public class BestFit extends Memory {
     }
 
     /**
-     * Prints a simple model of the memory. Example:
-     * <p>
-     * |    0 -  110 | Allocated
-     * |  111 -  150 | Free
-     * |  151 -  999 | Allocated
-     * | 1000 - 1024 | Free
+     * Prints a simple model of the memory, and the pointers.
      */
     @Override
     public void printLayout() {
         MemoryUtil.printLayout(memoryStatus);
         MemoryUtil.printPointerPos(pointers);
+    }
+
+    /**
+     * Compacts the memory space.
+     */
+    public void compact() {
+        MemoryUtil.compact(pointers, memoryStatus);
     }
 }
