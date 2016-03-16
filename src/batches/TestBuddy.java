@@ -9,13 +9,29 @@ import memory.Pointer;
 public class TestBuddy {
     public static void main(String[] args) {
         Buddy b = new Buddy(1024);
-        Pointer p1, p2, p3, p4;
+        Pointer p_a, p_b, p_c, p_d;
 
-        p1 = b.alloc(34);
-        p2 = b.alloc(66);
-        p3 = b.alloc(35);
-        p4 = b.alloc(67);
+        p_a = b.alloc(34);
+        p_b = b.alloc(66);
+        p_c = b.alloc(35);
+        p_d = b.alloc(67);
 
+        b.printLayout();
+
+        b.release(p_b);
+        System.out.println("\nRemoved B (66)");
+        b.printLayout();
+
+        b.release(p_d);
+        System.out.println("\nRemoved D (67)");
+        b.printLayout();
+
+        b.release(p_a);
+        System.out.println("\nRemoved A (34)");
+        b.printLayout();
+
+        b.release(p_c);
+        System.out.println("\nRemoved C (35)");
         b.printLayout();
     }
 }

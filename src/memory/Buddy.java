@@ -1,7 +1,6 @@
 package memory;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,6 +17,7 @@ public class Buddy extends Memory {
         private Block right;
         private Block left;
         private boolean empty;
+        private boolean first;
 
         public Block(Pointer p, int size) {
             this.pointer = p;
@@ -26,7 +26,7 @@ public class Buddy extends Memory {
         }
 
         public String toString() {
-            return String.format("%02d - %02d\t\t%s (size %d)", pointer.pointsAt(), pointer.pointsAt() + size - 1, empty ? "Free" : "Allocated", size);
+            return String.format("%03d - %03d\t\t%s (Size: %d)", pointer.pointsAt(), pointer.pointsAt() + size - 1, empty ? "Free" : "Allocated", size);
         }
 
     }
@@ -73,7 +73,7 @@ public class Buddy extends Memory {
                     if (size <= currentBlock.size / 2) {
                         int halfSize = currentBlock.size / 2;
 
-                        // Split block
+                        // Split block into two new
                         int startOfBlock = currentBlock.pointer.pointsAt();
                         Pointer p1 = new Pointer(startOfBlock, this);
                         Block b1 = new Block(p1, halfSize);
@@ -93,6 +93,8 @@ public class Buddy extends Memory {
                         // Connect the new blocks with each other
                         b1.right = b2;
                         b2.left = b1;
+                        b1.first = true;
+                        b2.first = false;
 
                         // Remove the old block and add the new
                         blocks.remove(currentBlock);
@@ -136,7 +138,49 @@ public class Buddy extends Memory {
      */
     @Override
     public void release(Pointer p) {
-        // TODO Implement this!
+        for (Block b : blocks) {
+            if (!b.pointer.equals(p))
+                continue;
+
+            b.empty = true;
+
+            tryMerge(b);
+
+            break;
+        }
+        sort();
+    }
+
+    public void tryMerge(Block b) {
+        Block both;
+
+        do {
+            both = null;
+
+            // Left
+            if (!b.first && b.left != null && b.left.empty && b.left.size == b.size) {
+                both = new Block(b.left.pointer, b.size + b.left.size);
+                both.left = b.left.left;
+                both.right = b.right;
+                both.first = true;
+                blocks.remove(b.left);
+
+            // Right
+            } else if (b.first && b.right != null && b.right.empty && b.right.size == b.size) {
+                both = new Block(b.pointer, b.size + b.right.size);
+                both.right = b.right.right;
+                both.left = b.left;
+                both.first = false;
+                blocks.remove(b.right);
+            }
+
+            if (both != null) {
+                blocks.add(both);
+                blocks.remove(b);
+                b = both;
+            }
+            sort();
+        } while (both != null);
     }
 
     /**
