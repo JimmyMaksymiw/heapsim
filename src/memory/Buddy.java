@@ -1,8 +1,10 @@
 package memory;
 
 import java.util.Collections;
+import java.util.EmptyStackException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * This memory model allocates memory cells based on the buddy method.
@@ -17,12 +19,13 @@ public class Buddy extends Memory {
         private Block right;
         private Block left;
         private boolean empty;
-        private boolean first;
+        private Stack<Pointer> relatives;
 
         public Block(Pointer p, int size) {
             this.pointer = p;
             this.size = size;
             empty = true;
+            relatives = new Stack<>();
         }
 
         public String toString() {
@@ -76,9 +79,15 @@ public class Buddy extends Memory {
                         // Split block into two new
                         int startOfBlock = currentBlock.pointer.pointsAt();
                         Pointer p1 = new Pointer(startOfBlock, this);
-                        Block b1 = new Block(p1, halfSize);
                         Pointer p2 = new Pointer(p1.pointsAt() + halfSize, this);
+                        Block b1 = new Block(p1, halfSize);
                         Block b2 = new Block(p2, currentBlock.size - b1.size);
+
+                        // Set the new block's relatives
+                        b1.relatives = (Stack<Pointer>) currentBlock.relatives.clone();
+                        b2.relatives = (Stack<Pointer>) currentBlock.relatives.clone();
+                        b1.relatives.push(currentBlock.pointer.clone());
+                        b2.relatives.push(currentBlock.pointer.clone());
 
                         // Connect the old block's neighbours with the new blocks, and vice versa
                         if (currentBlock.left != null) {
@@ -93,8 +102,6 @@ public class Buddy extends Memory {
                         // Connect the new blocks with each other
                         b1.right = b2;
                         b2.left = b1;
-                        b1.first = true;
-                        b2.first = false;
 
                         // Remove the old block and add the new
                         blocks.remove(currentBlock);
@@ -104,7 +111,7 @@ public class Buddy extends Memory {
                         // Set b1 as current block
                         currentBlock = b1;
 
-//                        sort();
+                        sort();
                     } else {
                         // Allocation can't fit into half size, use current
                         break;
@@ -153,33 +160,67 @@ public class Buddy extends Memory {
 
     public void tryMerge(Block b) {
         Block both;
+        Pointer relativesPointer;
 
         do {
             both = null;
+            relativesPointer = null;
 
-            // Left
-            if (!b.first && b.left != null && b.left.empty && b.left.size == b.size) {
-                both = new Block(b.left.pointer, b.size + b.left.size);
-                both.left = b.left.left;
-                both.right = b.right;
-                both.first = true;
-                blocks.remove(b.left);
+            // Retrieve pointer of relative
+            try {relativesPointer = b.relatives.peek();} catch (EmptyStackException ignored) {}
 
-            // Right
-            } else if (b.first && b.right != null && b.right.empty && b.right.size == b.size) {
-                both = new Block(b.pointer, b.size + b.right.size);
-                both.right = b.right.right;
-                both.left = b.left;
-                both.first = false;
-                blocks.remove(b.right);
+            // If relativesPointer is null, you're at the top
+            if (relativesPointer != null) {
+
+                // Merge right
+                if (b.right != null && b.pointer.pointsAt() == relativesPointer.pointsAt() && b.right.empty && b.right.size == b.size) {
+                    both = new Block(b.pointer, b.size + b.right.size);
+
+                    // Connect new block with neighbours
+                    both.right = b.right.right;
+                    both.left = b.left;
+
+                    // Remove closest relative and copy stack to merged block
+                    b.relatives.pop();
+                    both.relatives = (Stack<Pointer>) b.relatives.clone();
+
+                    // Remove old neighbour
+                    blocks.remove(b.right);
+                }
+
+                // Merge left
+                else if (b.left != null && relativesPointer.pointsAt() == b.left.pointer.pointsAt() && b.left.empty && b.left.size == b.size) {
+                    both = new Block(b.left.pointer, b.size + b.left.size);
+
+                    // Connect new block with neighbours
+                    both.right = b.right;
+                    both.left = b.left.left;
+
+                    // Remove closest relative and copy stack to merged block
+                    b.relatives.pop();
+                    both.relatives = (Stack<Pointer>) b.relatives.clone();
+
+                    // Remove old neighbour
+                    blocks.remove(b.left);
+                }
             }
 
             if (both != null) {
+                // Connect neighbours with new block
+                Block leftNeighbour = both.left;
+                Block rightNeighbour = both.left;
+                if (leftNeighbour != null) leftNeighbour.right = both;
+                if (rightNeighbour != null) rightNeighbour.left = both;
+
+                // Add new block and remove the old
                 blocks.add(both);
                 blocks.remove(b);
                 b = both;
             }
+
             sort();
+
+        // Keep going until you can't merge any more
         } while (both != null);
     }
 

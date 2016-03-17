@@ -70,4 +70,8 @@ public class Pointer {
 	public int[] read(int length) {
 		return memory.read(address, length);
 	}
+
+	public Pointer clone() {
+		return new Pointer(this.address, this.memory);
+	}
 }
