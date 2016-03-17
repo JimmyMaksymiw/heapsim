@@ -208,7 +208,7 @@ public class Buddy extends Memory {
             if (both != null) {
                 // Connect neighbours with new block
                 Block leftNeighbour = both.left;
-                Block rightNeighbour = both.left;
+                Block rightNeighbour = both.right;
                 if (leftNeighbour != null) leftNeighbour.right = both;
                 if (rightNeighbour != null) rightNeighbour.left = both;
 
