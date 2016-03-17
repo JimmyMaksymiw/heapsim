@@ -5,7 +5,7 @@ import memory.Pointer;
 
 /**
  * Buddy system test case based on Wikipedia's "In practice" example
- * found on https://en.wikipedia.org/wiki/Buddy_memory_allocation
+ * found at https://en.wikipedia.org/wiki/Buddy_memory_allocation
  * Created by Kalle Bornemark on 2016-03-16.
  */
 public class TestBuddy {
@@ -21,7 +21,7 @@ public class TestBuddy {
         b.printLayout();
 
         b.release(p_b);
-        System.out.println("\nRemoved 34");
+        System.out.println("\nRemoved B (66)");
         b.printLayout();
 
         b.release(p_d);
