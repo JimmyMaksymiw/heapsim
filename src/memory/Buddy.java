@@ -32,6 +32,11 @@ public class Buddy extends Memory {
             return String.format("%03d - %03d\t\t%s (Size: %d)", pointer.pointsAt(), pointer.pointsAt() + size - 1, empty ? "Free" : "Allocated", size);
         }
 
+        @SuppressWarnings("unchecked")
+        public Stack<Pointer> cloneRelatives() {
+            return (Stack<Pointer>)relatives.clone();
+        }
+
     }
 
     private final List<Block> blocks = new LinkedList<>();
@@ -84,8 +89,8 @@ public class Buddy extends Memory {
                     Block b2 = new Block(p2, currentBlock.size - b1.size);
 
                     // Set the new block's relatives
-                    b1.relatives = (Stack<Pointer>) currentBlock.relatives.clone();
-                    b2.relatives = (Stack<Pointer>) currentBlock.relatives.clone();
+                    b1.relatives = currentBlock.cloneRelatives();
+                    b2.relatives = currentBlock.cloneRelatives();
                     b1.relatives.push(currentBlock.pointer.clone());
                     b2.relatives.push(currentBlock.pointer.clone());
 
