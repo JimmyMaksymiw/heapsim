@@ -32,11 +32,13 @@ public class Buddy extends Memory {
             return String.format("%03d - %03d\t\t%s (Size: %d)", pointer.pointsAt(), pointer.pointsAt() + size - 1, empty ? "Free" : "Allocated", size);
         }
 
-        @SuppressWarnings("unchecked")
         public Stack<Pointer> cloneRelatives() {
-            return (Stack<Pointer>)relatives.clone();
+            Stack<Pointer> clonedRelatives = new Stack<>();
+            for (int i = relatives.size()-1; i >= 0; i--) {
+                clonedRelatives.push(relatives.get(i));
+            }
+            return clonedRelatives;
         }
-
     }
 
     private final List<Block> blocks = new LinkedList<>();
@@ -188,7 +190,7 @@ public class Buddy extends Memory {
 
                     // Remove closest relative and copy stack to merged block
                     b.relatives.pop();
-                    both.relatives = (Stack<Pointer>) b.relatives.clone();
+                    both.relatives = b.cloneRelatives();
 
                     // Remove old neighbour
                     blocks.remove(b.right);
@@ -204,7 +206,7 @@ public class Buddy extends Memory {
 
                     // Remove closest relative and copy stack to merged block
                     b.relatives.pop();
-                    both.relatives = (Stack<Pointer>) b.relatives.clone();
+                    both.relatives = b.cloneRelatives();
 
                     // Remove old neighbour
                     blocks.remove(b.left);

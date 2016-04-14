@@ -21,21 +21,21 @@ public class TestBuddy2 {
         b.printLayout();
 
         b.release(p_d);
-        System.out.println("\nRemoved 128");
+        System.out.println("\nRemoved 1st 128 block");
         b.printLayout();
 
         b.release(p_f);
-        System.out.println("\nRemoved 256");
+        System.out.println("\nRemoved 256 block");
         b.printLayout();
 
         b.release(p_a);
         b.release(p_b);
         b.release(p_c);
-        System.out.println("\nRemoved all 64s");
+        System.out.println("\nRemoved all 64 blocks");
         b.printLayout();
 
         b.release(p_e);
-        System.out.println("\nRemoved 32");
+        System.out.println("\nRemoved 32 block");
         b.printLayout();
     }
 }

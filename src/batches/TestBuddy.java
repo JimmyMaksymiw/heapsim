@@ -5,7 +5,7 @@ import memory.Pointer;
 
 /**
  * Buddy system test case based on Wikipedia's "In practice" example
- * found at https://en.wikipedia.org/wiki/Buddy_memory_allocation
+ * found at https://en.wikipedia.org/wiki/Buddy_memory_allocation#In_practice
  * Created by Kalle Bornemark on 2016-03-16.
  */
 public class TestBuddy {
